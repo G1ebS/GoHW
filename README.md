@@ -1,0 +1,1 @@
+[![Go CI](https://github.com/G1ebS/GoHW/actions/workflows/go.yml/badge.svg)](https://github.com/G1ebS/GoHW/actions/workflows/go.yml)
