@@ -1,0 +1,67 @@
+
+name: Go CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+
+    outputs:
+      modules: ${{ steps.find-modules.outputs.modules }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Find Go modules
+        id: find-modules
+        run: |
+          modules=$(find . -type f -name go.mod \
+            -not -path './vendor/*' \
+            -printf '%h\n' |
+            sed 's#^\./##' |
+            sort |
+            jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          echo "modules=$modules" >> "$GITHUB_OUTPUT"
+          echo "Found modules: $modules"
+
+  build-and-test:
+    needs: discover
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        module: ${{ fromJSON(needs.discover.outputs.modules) }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: ${{ matrix.module }}/go.mod
+          cache: false
+
+      - name: Build
+        working-directory: ${{ matrix.module }}
+        run: go build ./...
+
+      - name: Test
+        working-directory: ${{ matrix.module }}
+        run: go test ./...
+    
+      - name: Format
+        run: |
+          unformatted=$(gofmt -l .)
+
+          if [ -n "$unformatted" ]; then
+            echo "Files requiring formatting:"
+            echo "$unformatted"
+            exit 1
+          fi
+          echo "All Go files are formatted!"
