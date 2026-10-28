@@ -39,3 +39,22 @@ func TestAnalyzeSalesSkipsCancelledAndCountsInvalid(t *testing.T) {
 		t.Fatalf("unexpected report: %#v", got)
 	}
 }
+
+func TestAnalyzeSalesMinTopProductNameScenario(t *testing.T) {
+	sales := []analytics.Sale{
+		{Product: "Кофе", Category: "Напитки", Quantity: 3, UnitPriceKopecks: 15_000},
+		{Product: "Кружка", Category: "Посуда", Quantity: 1, UnitPriceKopecks: 25_000},
+		{Product: "Чай", Category: "Напитки", Quantity: 3, UnitPriceKopecks: 10_000},
+	}
+	got := analytics.AnalyzeSales(sales)
+	want := analytics.Report{
+		RevenueKopecks:    100_000,
+		UnitsSold:         7,
+		RevenueByCategory: map[string]int64{"Напитки": 75_000, "Посуда": 25_000},
+		TopProduct:        "Кофе",
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("AnalyzeSales() = %#v, want %#v", got, want)
+	}
+}

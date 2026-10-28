@@ -48,7 +48,7 @@ func AnalyzeSales(sales []Sale) Report {
 			topProduct.Quantity = quantity
 		}
 		if quantity == topProduct.Quantity {
-			topProduct.Product = max(topProduct.Product, product)
+			topProduct.Product = min(topProduct.Product, product)
 		}
 	}
 	report.TopProduct = topProduct.Product
